@@ -1,0 +1,313 @@
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import '../../core/app_export.dart';
+import '../../theme/custom_button_style.dart';
+import '../../widgets/custom_elevated_button.dart';
+import 'models/camera_scan_feature_model.dart';
+import 'provider/camera_scan_feature_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:tflite/tflite.dart';
+import 'dart:io';
+
+class CameraScanFeaturePage extends StatefulWidget {
+  const CameraScanFeaturePage({Key? key}) : super(key: key);
+
+  @override
+  CameraScanFeaturePageState createState() => CameraScanFeaturePageState();
+
+  static Widget builder(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => CameraScanFeatureProvider(),
+      child: CameraScanFeaturePage(),
+    );
+  }
+}
+
+class CameraScanFeaturePageState extends State<CameraScanFeaturePage> {
+  late CameraController _cameraController;
+  late Future<void> _initializeControllerFuture;
+  List<dynamic> _detectionResults = [];
+  bool _permissionsGranted = false;
+  File? _selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCameraController();
+    ObjectDetection.loadModel();
+  }
+
+  Future<void> _initializeCameraController() async {
+    final cameraPermissionGranted = await _checkCameraPermission();
+    if (!cameraPermissionGranted) {
+      final status = await Permission.camera.request();
+      if (status != PermissionStatus.granted) {
+        // Handle case where permissions are denied
+        // You can show a message to the user explaining why camera access is required
+        return;
+      }
+    }
+
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      // Handle case where no cameras are available
+      return;
+    }
+
+    final camera = cameras.first;
+    _cameraController = CameraController(
+      camera,
+      ResolutionPreset.medium,
+    );
+
+    _initializeControllerFuture = _cameraController.initialize();
+    setState(() {
+      _permissionsGranted = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    _cameraController.dispose();
+    Tflite.close();
+    super.dispose();
+  }
+
+  Future<void> _captureAndDetect() async {
+    try {
+      await _initializeControllerFuture;
+      final image = await _cameraController.takePicture();
+
+      final detections = await ObjectDetection.detectObjects(File(image.path));
+      setState(() {
+        _detectionResults = detections;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<bool> _checkCameraPermission() async {
+    final status = await Permission.camera.status;
+    return status == PermissionStatus.granted;
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final returnedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (returnedImage == null) return;
+
+    setState(() {
+      _selectedImage = File(returnedImage.path);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _permissionsGranted
+          ? FutureBuilder<void>(
+              future: _initializeControllerFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Stack(
+                    children: [
+                      _buildCameraPreview(),
+                      if (_detectionResults.isNotEmpty)
+                        CustomPaint(
+                          painter: ObjectPainter(_detectionResults),
+                        ),
+                    ],
+                  );
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
+            )
+          : Center(child: CircularProgressIndicator()),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.camera),
+        onPressed: _captureAndDetect,
+      ),
+    );
+  }
+
+  Widget _buildCameraPreview() {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: CameraPreview(_cameraController),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width * 0.1,
+              vertical: MediaQuery.of(context).size.height * 0.05,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.1),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        CustomImageView(
+                          imagePath: ImageConstant.imgCamera32,
+                          height: MediaQuery.of(context).size.width * 0.1,
+                          width: MediaQuery.of(context).size.width * 0.1,
+                          margin: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.02,
+                            bottom: MediaQuery.of(context).size.height * 0.02,
+                          ),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.15,
+                          margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.02),
+                          child: Text(
+                            "lbl_add_image".tr,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: CustomTextStyles.titleLargeOnPrimaryContainer,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Spacer(),
+                _buildColumnqrscan(context),
+                CustomImageView(
+                  imagePath: ImageConstant.imgVectorOnprimarycontainer,
+                  height: MediaQuery.of(context).size.width * 0.02,
+                  width: MediaQuery.of(context).size.width * 0.04,
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                Opacity(
+                  opacity: 0.4,
+                  child: Container(
+                    height: MediaQuery.of(context).size.width * 0.15,
+                    width: MediaQuery.of(context).size.width * 0.15,
+                    padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.02),
+                    decoration: AppDecoration.outlineOnPrimary1.copyWith(
+                      borderRadius: BorderRadiusStyle.circleBorder46,
+                    ),
+                    child: CustomImageView(
+                      imagePath: ImageConstant.imgCameraOnprimarycontainer,
+                      height: MediaQuery.of(context).size.width * 0.1,
+                      width: MediaQuery.of(context).size.width * 0.1,
+                      alignment: Alignment.center,
+                    ),
+                  ),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.08)
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColumnqrscan(BuildContext context) {
+    return Container(
+      decoration: AppDecoration.outlineOnPrimary.copyWith(
+        borderRadius: BorderRadiusStyle.roundedBorder8,
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 22.h,
+          vertical: 36.v,
+        ),
+        decoration: AppDecoration.fillOnPrimaryContainer.copyWith(
+          borderRadius: BorderRadiusStyle.roundedBorder8,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 21.v),
+            _selectedImage != null ? Image.file(_selectedImage!) : const Text("Please select an Image"),
+            CustomElevatedButton(
+              text: "lbl_upload_image".tr,
+              onPressed: () {
+                _pickImageFromGallery();
+              },
+            ),
+            SizedBox(height: 21.v),
+            CustomElevatedButton(
+              text: "lbl_scan_new_image".tr,
+              onPressed: () {
+                onTapScannewimage(context);
+              },
+            ),
+            SizedBox(height: 21.v),
+            CustomElevatedButton(
+              text: "lbl_qr_scan".tr,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  void onTapScannewimage(BuildContext context) {
+      _captureAndDetect();
+  }
+}
+
+class ObjectDetection {
+  static Future<void> loadModel() async {
+    await Tflite.loadModel(
+      model: "assets/mapuslan_model.tflite",
+      labels: "assets/mapuslan_labels.txt",
+    );
+  }
+
+  static Future<List<dynamic>> detectObjects(File image) async {
+	return (await Tflite.detectObjectOnImage(
+	  path: image.path,
+	  model: "SSDMobileNet",
+	  imageMean: 127.5,
+	  imageStd: 127.5, 
+	  threshold: 0.4, 
+	  numResultsPerClass: 1, 
+	)) ?? [];
+  }
+}
+
+class ObjectPainter extends CustomPainter {
+  final List<dynamic> detections;
+
+  ObjectPainter(this.detections);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var detection in detections) {
+      var rect = detection["rect"];
+      var paint = Paint()
+        ..color = Colors.red
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+
+      canvas.drawRect(
+        Rect.fromLTRB(
+          rect["x"] * size.width,
+          rect["y"] * size.height,
+          (rect["x"] + rect["w"]) * size.width,
+          (rect["y"] + rect["h"]) * size.height,
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+}

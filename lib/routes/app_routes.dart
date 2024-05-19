@@ -1,0 +1,32 @@
+import 'package:flutter/material.dart';
+import '../core/app_export.dart';
+import '../presentation/app_navigation_screen/app_navigation_screen.dart';
+import '../presentation/home_one_container_screen/home_one_container_screen.dart';
+import '../presentation/login_screen/login_screen.dart';
+import '../presentation/signup_screen/signup_screen.dart';
+import '../presentation/welcome_screen/welcome_screen.dart';
+import '../presentation/map_feature_page/map_feature_page.dart';
+import '../presentation/dashboard_or_profile_card_normal_user_page/dashboard_or_profile_card_normal_user_page.dart';
+import '../presentation/camera_scan_feature_page/camera_scan_feature_page.dart';
+
+
+class AppRoutes {
+  static const String welcomeScreen = '/welcome_screen';
+  static const String signupScreen = '/signup_screen';
+  static const String loginScreen = '/login_screen';
+  static const String homeOneContainerScreen = '/home_one_container_screen';
+  static const String appNavigationScreen = '/app_navigation_screen';
+  static const String initialRoute = '/initialRoute';
+  static const String cameraScanFeaturePage = '/camera_scan_feature_page';
+  static const String dashboardOrProfileCardNormalUserPage = '/dashboard_or_profile_card_normal_user_page';
+  static const String mapFeaturePage = '/map_feature_page';
+
+
+  static Map<String, WidgetBuilder> get routes => {
+    welcomeScreen: (context) => WelcomeScreen.builder(context),
+    signupScreen: (context) => SignupScreen.builder(context),
+    loginScreen: (context) => LoginScreen.builder(context),
+    homeOneContainerScreen: (context) => HomeOneContainerScreen.builder(context),
+    appNavigationScreen: (context) => AppNavigationScreen.builder(context),
+  };
+}

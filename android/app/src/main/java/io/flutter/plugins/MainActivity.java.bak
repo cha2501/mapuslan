@@ -1,0 +1,42 @@
+// Import necessary packages
+import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugins.GeneratedPluginRegistrant;
+import org.tensorflow.lite.TensorFlowLite;
+import org.tensorflow.lite.support.common.FileUtil;
+import org.tensorflow.lite.support.label.TensorLabel;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class MainActivity extends FlutterActivity {
+    @Override
+    public void configureFlutterEngine(FlutterEngine flutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine);
+    }
+
+    // Method to detect objects on an image
+    public List<Map<String, Object>> detectObjectOnImage(String imagePath) {
+        try {
+            // Load the TFLite model
+            MappedByteBuffer tfliteModel = FileUtil.loadMappedFile(this, "mapuslan_model.tflite");
+            TensorFlowLite tfLite = new TensorFlowLite(tfliteModel);
+
+            // Perform object detection on the image
+            // Your implementation for object detection goes here
+
+            // Example: Creating a list of detected objects
+            List<Map<String, Object>> detections = new ArrayList<>();
+            // Add detected objects to the list
+
+            return detections;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}

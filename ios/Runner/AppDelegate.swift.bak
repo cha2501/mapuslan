@@ -1,0 +1,31 @@
+import UIKit
+import Flutter
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+      // Method to detect objects on an image
+    @objc func detectObjectOnImage(_ imagePath: String, result: FlutterResult) {
+        do {
+            // Load the TFLite model
+            let tfliteModel = try TFLiteModel(modelPath: "mapuslan_model.tflite")
+
+            // Perform object detection on the image
+            // Your implementation for object detection goes here
+
+            // Example: Creating a list of detected objects
+            var detections: [[String: Any]] = []
+            // Add detected objects to the list
+
+            result(detections)
+        } catch {
+            result(FlutterError(code: "TFLiteError", message: "Failed to load TFLite model", details: nil))
+        }
+    }
+}
