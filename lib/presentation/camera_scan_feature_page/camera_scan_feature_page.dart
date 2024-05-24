@@ -180,22 +180,10 @@ class CameraScanFeaturePageState extends State<CameraScanFeaturePage> {
                   ),
                 ),
                 Spacer(),
-                _buildColumnqrscan(context),
-                CustomImageView(
-                  imagePath: ImageConstant.imgVectorOnprimarycontainer,
-                  height: MediaQuery.of(context).size.width * 0.02,
-                  width: MediaQuery.of(context).size.width * 0.04,
-                ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 Opacity(
                   opacity: 0.4,
                   child: Container(
-                    height: MediaQuery.of(context).size.width * 0.15,
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.02),
-                    decoration: AppDecoration.outlineOnPrimary1.copyWith(
-                      borderRadius: BorderRadiusStyle.circleBorder46,
-                    ),
                     child: CustomImageView(
                       imagePath: ImageConstant.imgCameraOnprimarycontainer,
                       height: MediaQuery.of(context).size.width * 0.1,
@@ -213,47 +201,6 @@ class CameraScanFeaturePageState extends State<CameraScanFeaturePage> {
     );
   }
 
-  Widget _buildColumnqrscan(BuildContext context) {
-    return Container(
-      decoration: AppDecoration.outlineOnPrimary.copyWith(
-        borderRadius: BorderRadiusStyle.roundedBorder8,
-      ),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 22.h,
-          vertical: 36.v,
-        ),
-        decoration: AppDecoration.fillOnPrimaryContainer.copyWith(
-          borderRadius: BorderRadiusStyle.roundedBorder8,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 21.v),
-            _selectedImage != null ? Image.file(_selectedImage!) : const Text("Please select an Image"),
-            CustomElevatedButton(
-              text: "lbl_upload_image".tr,
-              onPressed: () {
-                _pickImageFromGallery();
-              },
-            ),
-            SizedBox(height: 21.v),
-            CustomElevatedButton(
-              text: "lbl_scan_new_image".tr,
-              onPressed: () {
-                onTapScannewimage(context);
-              },
-            ),
-            SizedBox(height: 21.v),
-            CustomElevatedButton(
-              text: "lbl_qr_scan".tr,
-            )
-          ],
-        ),
-      ),
-    );
-  }
 
   void onTapScannewimage(BuildContext context) {
       _captureAndDetect();

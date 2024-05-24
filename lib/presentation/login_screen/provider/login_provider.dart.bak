@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+
+class LoginProvider with ChangeNotifier {
+  TextEditingController userNameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  bool rememberPasswordSection = false;
+  bool isShowPassword = false;
+
+  void changePasswordVisibility() {
+    isShowPassword = !isShowPassword;
+    notifyListeners();
+  }
+
+  void changeCheckBox(bool? value) {
+    rememberPasswordSection = value ?? false;
+    notifyListeners();
+  }
+
+  bool validateLogin() {
+    String username = userNameController.text;
+    String password = passwordController.text;
+
+    print("Debug: Username entered - $username");
+    print("Debug: Password entered - $password");
+
+    if (username == 'user' && password == 'password') {
+      print("Debug: Default credentials are correct");
+      return true;
+    } else {
+      print("Debug: Invalid credentials");
+      return false;
+    }
+  }
+}
